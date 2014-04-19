@@ -13,6 +13,7 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  */
+
 var i18nFilter = function (i18nService) {
 
   return function () {
@@ -21,20 +22,23 @@ var i18nFilter = function (i18nService) {
 
 }
 
-var i18nService = function ($cookieStore, $http, $window) {
+var i18nService = function ($cookieStore, $http, $window, $sce) {
 
   /*
    Internationalization i18n container
    language: Retrieve the previously stored language. If none, retrieve language of navigator
    locales:  Declare all locale resource file URI-path, including mandatory "default" entry
+   Example:
+   locales: {
+   'default': '../i18n/resources-locale_en_US.json',
+   'en': '../i18n/resources-locale_fr.json'
+   }
    */
   var i18n = {
     language: $cookieStore.get('locale') || $window.navigator.userLanguage || $window.navigator.language,
     dictionary: [],
     loaded: false,
     locales: {
-      'default': '../i18n/resources-locale_en.json',
-      'en': '../i18n/resources-locale_en.json'
     }
   };
 
@@ -87,32 +91,37 @@ var i18nService = function ($cookieStore, $http, $window) {
 
   // Replace function for parametered localized strings
   this.replaceArgs = function (val, isConditional, args) {
+    var multiParams = false;
     // If we have a plural/conditional string definition, we need to handle the {n} replacement
     if (args.length > 1)
-      if (isConditional)
-        val.replace('{n}', args[1]);
+      if (isConditional) {
+        val = val.replace('{}', args[1]);
+        if (args.length > 2)
+          multiParams = true;
+      }
+      else if (args.length > 1)
+        multiParams = true;
 
     // Parameters browse for either generic or named parameters
     for (var i = isConditional ? 2 : 1; i < args.length; i++) {
       // For named parameters
-      if (args[i] instanceof Object) {
-        for (var p in args[i]) {
-          val = val.replace("{" + p + "}", args[i][p]);
-        }
+      if (args[i] instanceof Object)
+        for (var p in args[i])
+          val = val.replace(new RegExp('\\{' + p + '\\}', 'g'), args[i][p]);
+      // For generic parameters, either multi params or not
+      else if (multiParams) {
+        var toReplace = '\\{' + (isConditional ? (i - 1) : i) + '\\}';
+        val = val.replace(new RegExp(toReplace, 'g'), args[i]);
       }
-      // For generic parameters
       else
-        val = val.replace('{}', args[i]);
+        val = val.replace(new RegExp('\\{\\}', 'g'), args[i]);
     }
     return val;
   };
 
   // Computed local string retrieval method
   this.getString = function (args) {
-    //TODO why : var input = args[0];?
     var input = args[0];
-    //var input = i18n.dictionary[args];
-    //console.log("in getString function with input",input,"and dictionary loaded",i18n.loaded);
     if (i18n.loaded && input in i18n.dictionary) {
       var val = i18n.dictionary[input];
       // For plural/conditional separated entries
@@ -132,23 +141,29 @@ var i18nService = function ($cookieStore, $http, $window) {
         return this.replaceArgs(val, true, args);
       }
       // String replace if arguments supplied
-      return this.replaceArgs(val, false, args);
+      return $sce.trustAsHtml(this.replaceArgs(val, false, args));
     }
     else {
       return input;
     }
   };
 
-  // Init service
-  this.selectLanguage(i18n.language);
+  //SetLocales to init the library
+  this.setLocales = function(locales) {
+    i18n.locales = locales;
+  }
+
+  // Init service if resources have already been loaded
+  if(i18n.locales && i18n.locales.length > 0)
+    this.selectLanguage(i18n.language);
 
 };
 
 /** Module declaration */
-var i18nModule = angular.module('i18n', ['ngCookies']);
+var i18nModule = angular.module('i18n', ['ngCookies', 'ngSanitize']);
 
 /** Filter declaration */
 i18nModule.filter('i18n', ['i18nService', i18nFilter]);
 
 /** Service declaration */
-i18nModule.service('i18nService', ['$cookieStore', '$http', '$window', i18nService]);
+i18nModule.service('i18nService', ['$cookieStore', '$http', '$window', '$sce', i18nService]);
