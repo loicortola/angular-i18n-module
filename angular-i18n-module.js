@@ -38,8 +38,7 @@ var i18nService = function ($cookieStore, $http, $window, $sce) {
     language: $cookieStore.get('locale') || $window.navigator.userLanguage || $window.navigator.language,
     dictionary: [],
     loaded: false,
-    locales: {
-    }
+    locales: null
   };
 
   // Resource loading method
@@ -147,6 +146,12 @@ var i18nService = function ($cookieStore, $http, $window, $sce) {
       return input;
     }
   };
+
+  //IsLocaleEmpty to test if locales were set or not
+  this.isLocaleEmpty = function() {
+    var locale = i18n.locales;
+    return i18n.locales ? false : true;
+  }
 
   //SetLocales to init the library
   this.setLocales = function(locales, selectLanguage) {

@@ -31,13 +31,13 @@ angular.module('myApp', ['i18n']);
 Once in your app, inject the i18nService and configure your locale resources  
 __NB: You need to put at least one resource named "default"__
 ```javascript
-i18nService.setLocales({
-      'default': '../i18n/resources-locale_en_US.json',
-      'en': '../i18n/resources-locale_en_US.json',
-      'fr': '../i18n/resources-locale_fr.json',
-      'es': '../i18n/resources-locale_es.json'
-    }
-  });
+if(i18nService.isLocaleEmpty())
+    i18nService.setLocales({
+        'default': '../../i18n/resources-locale_en_US.json',
+        'en': '../../i18n/resources-locale_en_US.json',
+        'fr': '../../i18n/resources-locale_fr.json',
+        'es': '../../i18n/resources-locale_es.json'
+    }, true);
 ```  
 
 # Documentation
@@ -70,6 +70,11 @@ i18nService.setLocales({
 ***Example***  
 `var myString = getString('label.hello.world');`  
 `var myString2 = getString('message.game.over',36532,'Loic');`
+
+####isLocaleEmpty()
+
+**returns** true if the locale has been set previously, false otherwise
+
 
 ####selectLanguage( language )
 
