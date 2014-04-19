@@ -1,0 +1,10 @@
+{
+  "name": "angular-i18n-module",
+  "version": "0.1.0",
+  "main": "./angular-i18n-module.js",
+  "dependencies": {
+    "angular": "1.x",
+    "angular-cookies": "1.x",
+    "angular-sanitize": "1.x"
+  }
+}
