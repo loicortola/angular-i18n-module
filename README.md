@@ -84,17 +84,18 @@ the matching locale will be loaded **asynchronously**, and will call **$digest()
 Otherwise, the fallback will be to load the locale with the key '**default**'
 
 ***Example***  
-`selectLanguage('en_US');`
+`selectLanguage('en_US');`  
 
-####setLocales( locales )
+
+####setLocales( locales , select )
 
 | Parameter   | Description                                                                                                                                                                   |
 |:------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | __locales__ | A JSON object with *'key': 'value'* pairs. **key** being the __RFC 3066__ string representing the language (or **default**), and **value** the path of the json resource file |
+| __select__   | Boolean (optional)                                                                                                                                                           |
 
-
-Sets the custom locales **into** the **i18n** module
-
+Sets the custom locales **into** the **i18n** module.  
+If the second argument is set and is true, it triggers the selectLanguage() method with the default environment language of the user (browsers language)                                                  
 ***Example***  
 ```
 setLocales({

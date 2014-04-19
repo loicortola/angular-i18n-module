@@ -149,8 +149,10 @@ var i18nService = function ($cookieStore, $http, $window, $sce) {
   };
 
   //SetLocales to init the library
-  this.setLocales = function(locales) {
+  this.setLocales = function(locales, selectLanguage) {
     i18n.locales = locales;
+    if(selectLanguage)
+      this.selectLanguage(i18n.language);
   }
 
   // Init service if resources have already been loaded
