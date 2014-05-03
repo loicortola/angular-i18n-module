@@ -1,6 +1,6 @@
 {
   "name": "angular-i18n-module",
-  "version": "0.1.0",
+  "version": "0.1.4",
   "main": "./angular-i18n-module.js",
   "dependencies": {
     "angular": "1.x",
