@@ -121,6 +121,9 @@ var i18nService = function ($cookieStore, $http, $window, $sce) {
   // Computed local string retrieval method
   this.getString = function (args) {
     var input = args[0];
+    if(!(args instanceof Object))
+      input = args;
+      
     if (i18n.loaded && input in i18n.dictionary) {
       var val = i18n.dictionary[input];
       // For plural/conditional separated entries
