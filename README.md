@@ -22,22 +22,28 @@ Add a `<script>` to your `index.html`:
 <script src="/bower_components/angular-i18n-module/angular-i18n-module.js"></script>
 ```
 
-Add `i18n` as a dependency for your app:
-
+Add `i18n` as a dependency for your app in your main Angular app.js, and configure your locale resources:  
+__NB: You need to put at least one resource named "default"__  
 ```javascript
-angular.module('myApp', ['i18n']);
-```
+var app = angular.module('app', ['myModule1', 'myModule2 ', 'myModule3', 'i18n']);
 
-Once in your app, inject the i18nService and configure your locale resources  
-__NB: You need to put at least one resource named "default"__
-```javascript
-if(i18nService.isLocaleEmpty())
-    i18nService.setLocales({
+var i18n = angular.module('i18n');
+  i18n.config(['i18nServiceProvider', function(i18nServiceProvider) {
+      //Set Locales for service
+      i18nServiceProvider.setLocales({
         'default': '../../i18n/resources-locale_en_US.json',
         'en': '../../i18n/resources-locale_en_US.json',
         'fr': '../../i18n/resources-locale_fr.json',
         'es': '../../i18n/resources-locale_es.json'
     }, true);
+  }]);
+```
+
+Simply inject the angular i18nService in any of your Angular controllers:  
+```javascript
+app.controller('MainCtrl', ['$scope', 'i18nService', function MainCtrl($scope, i18nService) {
+    //Your controller code here
+}]);
 ```  
 
 # Documentation
