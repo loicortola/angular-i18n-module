@@ -62,8 +62,8 @@ var i18nService = function () {
             loadResources: function (url) {
                 $http.get(url)
                     .success(function (data) {
-                        i18n.dictionary = data;
-                        i18n.loaded = true;
+                        i18nService.i18n.dictionary = data;
+                        i18nService.i18n.loaded = true;
                         console.debug('i18n: locale successfully loaded');
                     })
                     .error(function () {
@@ -140,8 +140,8 @@ var i18nService = function () {
                 if (!(args instanceof Object))
                     input = args;
 
-                if (i18n.loaded && input in i18n.dictionary) {
-                    var val = i18n.dictionary[input];
+                if (this.i18n.loaded && input in this.i18n.dictionary) {
+                    var val = this.i18n.dictionary[input];
                     // For plural/conditional separated entries
                     if (val instanceof Object) {
                         if (val.hasOwnProperty('zero') && args[1] == 0)
@@ -168,8 +168,8 @@ var i18nService = function () {
 
             //IsLocaleEmpty to test if locales were set or not
             isLocaleEmpty: function () {
-                var locale = i18n.locales;
-                return i18n.locales ? false : true;
+                var locale = this.i18n.locales;
+                return this.i18n.locales ? false : true;
             }
 
         }
