@@ -206,11 +206,11 @@ i18nModule.directive('i18nLanguageSelector', ['$compile', 'i18nService', functio
              element.removeAttr('data-i18n-language-selector');
                 return {
                     pre: function preLink(scope, iElement, iAttrs, controller){
-                        scope.select = function() {
-                            service.selectLanguage(iAttrs.i18nLanguageSelector);
-                        }
                     },
-                    post: function postLink(scope, iElement, iAttrs, controller){
+                    post: function postLink(scope, iElement){
+                        scope.select = function() {
+                            service.selectLanguage(scope.i18nLanguageSelector);
+                        }
                         $compile(iElement)(scope);
                     }
                 };

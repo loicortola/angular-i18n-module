@@ -245,8 +245,8 @@ var outputMessage = i18nService.getString('message.feedback',true);
 Simply call the directive as a parameter for any element of your html template.
 
 ```html
-<div i18n-language-selector='fr'>Click to switch to french</div>
-<button i18n-language-selector='en'>Click to switch to english</button>
+<div i18n-language-selector="'fr'">Click to switch to french</div>
+<button i18n-language-selector="'en'">Click to switch to english</button>
 ```
 
 # License
