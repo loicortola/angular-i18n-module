@@ -191,17 +191,30 @@ i18nModule.provider('i18nService', i18nService);
 i18nModule.filter('i18n', ['i18nService', i18nFilter]);
 
 /** Directive declaration */
-i18nModule.directive('i18nLanguageSelector', ['i18nService', function(i18nService){
+i18nModule.directive('i18nLanguageSelector', ['$compile', 'i18nService', function($compile, service){
        return {
-           restrict: 'AEC',
+           restrict: 'A',
+           replace: false,
+           terminal: true,
+           priority: 1000,
            scope: {
-             "class" : "=",
-             "style": "="
+               "i18nLanguageSelector": '='
            },
-           link: function(scope, elements, attrs) {
-              scope.locales = i18nService.i18n.locales;
-              scope.select  = i18nService.selectLanguage;
-           },
-           template: "<button class='{{class}}' style='{{style}}' ng-repeat='(key,locale) in locales' ng-click='select(key)' >{{key}}</button>"
+           compile: function compile(element, attrs){
+             element.attr('ng-click', 'select()');
+             element.removeAttr('i18n-language-selector');
+             element.removeAttr('data-i18n-language-selector');
+                return {
+                    pre: function preLink(scope, iElement, iAttrs, controller){
+                        scope.select = function() {
+                            service.selectLanguage(iAttrs.i18nLanguageSelector);
+                        }
+                    },
+                    post: function postLink(scope, iElement, iAttrs, controller){
+                        $compile(iElement)(scope);
+                    }
+                };
+           }
+
        }
 }]);

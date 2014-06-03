@@ -51,7 +51,7 @@ if(i18nService.isLocaleEmpty())
 * Handle messages with html content
 * Only load the current language  
 * Easy asynchronous locale load
-* Customizable buttons to quickly switch locales
+* Directive to enable any element to change the locale
 
 
 ## API
@@ -242,16 +242,11 @@ var outputMessage = i18nService.getString('message.feedback',true);
 
 ###D. Add locale-switching buttons
 
-Simply call the directive from your html template.
+Simply call the directive as a parameter for any element of your html template.
 
 ```html
-<i18n-language-selector></i18n-language-selector>
-```
-
-You can pass css-classes and styles in the element, simply be careful to use both double and single quotes
-
-```html
-<i18n-language-selector class="'button'" style="'margin:0'"></i18n-language-selector>
+<div i18n-language-selector='fr'>Click to switch to french</div>
+<button i18n-language-selector='en'>Click to switch to english</button>
 ```
 
 # License
