@@ -144,7 +144,7 @@ var i18nService = function () {
                     var val = i18nService.i18n.dictionary[input];
                     // For plural/conditional separated entries
                     if (val instanceof Object) {
-                        if (val.hasOwnProperty('zero') && args[1] == 0)
+                        if (val.hasOwnProperty('zero') && (!args[1]  || args[1] == 0))
                             val = val['zero'];
                         else if (val.hasOwnProperty('one') && args[1] == 1)
                             val = val['one'];
