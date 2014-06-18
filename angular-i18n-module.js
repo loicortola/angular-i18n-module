@@ -62,8 +62,8 @@ var i18nService = function () {
             loadResources: function (url) {
                 $http.get(url)
                     .success(function (data) {
-                        i18n.dictionary = data;
-                        i18n.loaded = true;
+                        i18nService.i18n.dictionary = data;
+                        i18nService.i18n.loaded = true;
                         console.debug('i18n: locale successfully loaded');
                     })
                     .error(function () {
@@ -74,9 +74,9 @@ var i18nService = function () {
             // Language selection method
             selectLanguage: function (language) {
 
-                this.i18n.language = language;
+                i18nService.i18n.language = language;
 
-                console.info("i18n: Selected language:", this.i18n.language);
+                console.info("i18n: Selected language:", i18nService.i18n.language);
 
 
                 // Load selected locale or default if none
@@ -85,14 +85,14 @@ var i18nService = function () {
                 // match "en_US" in locales? no
                 // > match "en" in locales? yes
                 // (otherwise, default locale will be returned)
-                var url = this.i18n.locales['default'];
+                var url = i18nService.i18n.locales['default'];
 
-                if (this.i18n.language in this.i18n.locales) {
-                    url = this.i18n.locales[this.i18n.language];
+                if (i18nService.i18n.language in i18nService.i18n.locales) {
+                    url = i18nService.i18n.locales[i18nService.i18n.language];
                 }
                 else {
-                    if (this.i18n.language.substr(0, 2) in this.i18n.locales) {
-                        url = this.i18n.locales[this.i18n.language.substr(0, 2)];
+                    if (i18nService.i18n.language.substr(0, 2) in i18nService.i18n.locales) {
+                        url = i18nService.i18n.locales[i18nService.i18n.language.substr(0, 2)];
                     }
                     else {
                         console.log("i18n: Did not find a matching locale resource. Falling back to default");
@@ -100,9 +100,9 @@ var i18nService = function () {
                 }
 
                 // Save language selection to client's cookie
-                $cookieStore.put('locale', this.i18n.language);
+                $cookieStore.put('locale', i18nService.i18n.language);
 
-                this.loadResources(url);
+                i18nService.loadResources(url);
             },
 
             // Replace function for parametered localized strings
@@ -140,11 +140,11 @@ var i18nService = function () {
                 if (!(args instanceof Object))
                     input = args;
 
-                if (i18n.loaded && input in i18n.dictionary) {
-                    var val = i18n.dictionary[input];
+                if (i18nService.i18n.loaded && input in i18nService.i18n.dictionary) {
+                    var val = i18nService.i18n.dictionary[input];
                     // For plural/conditional separated entries
                     if (val instanceof Object) {
-                        if (val.hasOwnProperty('zero') && args[1] == 0)
+                        if (val.hasOwnProperty('zero') && (!args[1]  || args[1] == 0))
                             val = val['zero'];
                         else if (val.hasOwnProperty('one') && args[1] == 1)
                             val = val['one'];
@@ -168,8 +168,8 @@ var i18nService = function () {
 
             //IsLocaleEmpty to test if locales were set or not
             isLocaleEmpty: function () {
-                var locale = i18n.locales;
-                return i18n.locales ? false : true;
+                var locale = i18nService.i18n.locales;
+                return i18nService.i18n.locales ? false : true;
             }
 
         }
@@ -189,3 +189,32 @@ i18nModule.provider('i18nService', i18nService);
 
 /** Filter declaration */
 i18nModule.filter('i18n', ['i18nService', i18nFilter]);
+
+/** Directive declaration */
+i18nModule.directive('i18nLanguageSelector', ['$compile', 'i18nService', function($compile, service){
+       return {
+           restrict: 'A',
+           replace: false,
+           terminal: true,
+           priority: 1000,
+           scope: {
+               "i18nLanguageSelector": '='
+           },
+           compile: function compile(element, attrs){
+             element.attr('ng-click', 'select()');
+             element.removeAttr('i18n-language-selector');
+             element.removeAttr('data-i18n-language-selector');
+                return {
+                    pre: function preLink(scope, iElement, iAttrs, controller){
+                    },
+                    post: function postLink(scope, iElement){
+                        scope.select = function() {
+                            service.selectLanguage(scope.i18nLanguageSelector);
+                        }
+                        $compile(iElement)(scope);
+                    }
+                };
+           }
+
+       }
+}]);

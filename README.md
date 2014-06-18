@@ -57,6 +57,7 @@ app.controller('MainCtrl', ['$scope', 'i18nService', function MainCtrl($scope, i
 * Handle messages with html content
 * Only load the current language  
 * Easy asynchronous locale load
+* Directive to enable any element to change the locale
 
 
 ## API
@@ -245,6 +246,14 @@ var myStoryEnd = i18nService.getString('message.story.end','John','Paul','Matthe
 var outputMessage = i18nService.getString('message.feedback',true);
 ```
 
+###D. Add locale-switching buttons
+
+Simply call the directive as a parameter for any element of your html template.
+
+```html
+<div i18n-language-selector="'fr'">Click to switch to french</div>
+<button i18n-language-selector="'en'">Click to switch to english</button>
+```
 
 # License
 ---------------------
