@@ -52,12 +52,6 @@ var I18N = function ($cookieStore, $http, $q, $window, $sce, $rootScope, config)
   this.i18n.dictionary = [];
   this.selectLanguage(this.i18n.language);
 
-
-  $rootScope.$watch((function() { return this.i18n.loaded}).bind(this), function(newVal,oldVal) {
-    //console.log("watched "+newVal);
-  });
-
-
 };
 
 // Prototype Data
