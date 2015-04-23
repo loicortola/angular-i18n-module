@@ -18,13 +18,13 @@ var i18nFilter = function (i18nService) {
 
   var filter = function () {
     return i18nService.getString(arguments);
-  }
+  };
 
   filter.$stateful = true;
 
   return filter;
 
-}
+};
 
 /** Module declaration */
 var i18nModule = angular.module('i18n', ['ngCookies', 'ngSanitize']);
@@ -39,6 +39,7 @@ var I18N = function ($cookieStore, $http, $q, $window, $sce, $rootScope, config)
   this.$q = $q;
   this.$window = $window;
   this.$sce = $sce;
+  this.$rootScope = $rootScope;
 
 
   /* Init i18n Attributes:
@@ -53,11 +54,11 @@ var I18N = function ($cookieStore, $http, $q, $window, $sce, $rootScope, config)
 
 
   $rootScope.$watch((function() { return this.i18n.loaded}).bind(this), function(newVal,oldVal) {
-    console.log("watched "+newVal);
+    //console.log("watched "+newVal);
   });
 
 
-}
+};
 
 // Prototype Data
 I18N.prototype.i18n = {
@@ -114,11 +115,13 @@ I18N.prototype.i18n = {
     // Save language selection to client's cookie
     this.$cookieStore.put('locale', this.i18n.language);
 
+    var rootScope = this.$rootScope;
+
     return this.loadResources(url)
                .then(function () {
-                  $rootScope.$emit('i18nService.onLocaleLoaded', this.i18n.language);
+                  rootScope.$emit('i18nService.onLocaleLoaded', this.i18n.language);
                });
-  }
+  };
 
   // Prototype Replace function for parametered localized strings
   I18N.prototype.replaceArgs = function (val, isConditional, args) {
@@ -148,7 +151,7 @@ I18N.prototype.i18n = {
         val = val.replace(new RegExp('\\{\\}', 'g'), args[i]);
     }
     return val;
-  }
+  };
 
   // Computed local string retrieval method
   I18N.prototype.getString = function (args) {
@@ -180,12 +183,12 @@ I18N.prototype.i18n = {
     else {
       return input;
     }
-  }
+  };
 
   // IsLocaleEmpty to test if locales were set or not
   I18N.prototype.isLocaleEmpty = function () {
     return this.i18n.locales ? false : true;
-  }
+  };
 
 
 var i18nService = function () {
@@ -214,7 +217,7 @@ var i18nService = function () {
 
   }];
 
-}
+};
 
 /** Provider declaration */
 i18nModule.provider('i18nService', i18nService);
@@ -242,7 +245,7 @@ i18nModule.directive('i18nLanguageSelector', ['$compile', 'i18nService', functio
         post: function postLink(scope, iElement) {
           scope.select = function () {
             service.selectLanguage(scope.i18nLanguageSelector);
-          }
+          };
           $compile(iElement)(scope);
         }
       };
