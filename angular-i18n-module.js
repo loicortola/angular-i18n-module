@@ -48,141 +48,180 @@ var I18N = function ($cookieStore, $http, $q, $window, $sce, $rootScope, config)
    * dictionary: the current dictionary
    */
   this.i18n.language = $cookieStore.get('locale') || $window.navigator.userLanguage || $window.navigator.language;
-  this.i18n.locales = config.locales;
   this.i18n.dictionary = [];
-  this.selectLanguage(this.i18n.language);
-
+  var self = this;
+  if (config.path) {
+    // If external config 
+    $http.get(config.path)
+        .success(function (data) {
+          self.i18n.locales = data;
+          self.selectLanguage(self.i18n.language);
+        })
+        .error(function () {
+          console.error('i18n: Cannot load external config');
+        });
+  } else {
+    // If local config
+    this.i18n.locales = config.locales;
+    this.selectLanguage(this.i18n.language);
+  }
 };
 
 // Prototype Data
 I18N.prototype.i18n = {
-    language: null,
-    dictionary: this.dictionary,
-    loaded: false,
-    locales: null
-  };
+  language: null,
+  dictionary: this.dictionary,
+  loaded: false,
+  locales: null
+};
 
 // Prototype Resource loading method
-  I18N.prototype.loadResources = function (url) {
-    var deferred = this.$q.defer();
-    this.$http.get(url)
-        .success((function (data) {
+I18N.prototype.loadResources = function (url, append) {
+  var deferred = this.$q.defer();
+  this.$http.get(url)
+      .success((function (data) {
+        if (append) {
+          // If in append mode, add or replace keys into existing dictionary
+          for (key in data) {
+            this.i18n.dictionary[key] = data[key];
+          }
+        } else {
+          // Else, simply replace dictionary
           this.i18n.dictionary = data;
-          this.i18n.loaded = true;
-          console.debug('i18n: locale successfully loaded');
-          deferred.resolve();
-        }).bind(this))
-        .error((function () {
-          console.error('i18n: Cannot load locale');
-          deferred.reject();
-        }).bind(this));
-    return deferred.promise;
-  };
+        }
+        this.i18n.loaded = true;
+        console.debug('i18n: locale successfully loaded');
+        deferred.resolve();
+      }).bind(this))
+      .error((function () {
+        console.error('i18n: Cannot load locale');
+        deferred.reject();
+      }).bind(this));
+  return deferred.promise;
+};
 
-  // Prototype Language selection method
-  I18N.prototype.selectLanguage = function (language) {
+// Prototype Language selection method
+I18N.prototype.selectLanguage = function (language) {
 
-    this.i18n.language = language;
+  this.i18n.language = language;
 
-    console.debug("i18n: Selected language:", this.i18n.language);
+  console.debug("i18n: Selected language:", this.i18n.language);
 
-    // Load selected locale or default if none
-    // example:
-    // browser language: en_US
-    // match "en_US" in locales? no
-    // > match "en" in locales? yes
-    // (otherwise, default locale will be returned)
-    var url = this.i18n.locales['default'];
+  // Load selected locale or default if none
+  // example:
+  // browser language: en_US
+  // match "en_US" in locales? no
+  // > match "en" in locales? yes
+  // (otherwise, default locale will be returned)
+  var res = this.i18n.locales['default'];
 
-    if (this.i18n.language in this.i18n.locales) {
-      url = this.i18n.locales[this.i18n.language];
+  if (this.i18n.language in this.i18n.locales) {
+    res = this.i18n.locales[this.i18n.language];
+  }
+  else {
+    if (this.i18n.language.substr(0, 2) in this.i18n.locales) {
+      res = this.i18n.locales[this.i18n.language.substr(0, 2)];
     }
     else {
-      if (this.i18n.language.substr(0, 2) in this.i18n.locales) {
-        url = this.i18n.locales[this.i18n.language.substr(0, 2)];
-      }
-      else {
-        console.log("i18n: Did not find a matching locale resource. Falling back to default");
+      console.log("i18n: Did not find a matching locale resource. Falling back to default");
+    }
+  }
+
+  // Save language selection to client's cookie
+  this.$cookieStore.put('locale', this.i18n.language);
+
+  var rootScope = this.$rootScope;
+
+  var p;
+  var self = this;
+  // If multiple urls
+  if (res instanceof Array) {
+    for (var i = 0; i < res.length; i++) {
+      if (!p) {
+        p = this.loadResources(res[i]);
+      } else {
+        p.then(function (n) {
+          return function () {
+            return self.loadResources(res[n], true);
+          };
+        }(n));
       }
     }
+  } else {
+    p = this.loadResources(res);
+  }
 
-    // Save language selection to client's cookie
-    this.$cookieStore.put('locale', this.i18n.language);
+  return p.then(function () {
+    rootScope.$emit('i18nService.onLocaleLoaded', this.i18n.language);
+  });
+};
 
-    var rootScope = this.$rootScope;
-
-    return this.loadResources(url)
-               .then(function () {
-                  rootScope.$emit('i18nService.onLocaleLoaded', this.i18n.language);
-               });
-  };
-
-  // Prototype Replace function for parametered localized strings
-  I18N.prototype.replaceArgs = function (val, isConditional, args) {
-    var multiParams = false;
-    // If we have a plural/conditional string definition, we need to handle the {n} replacement
-    if (args.length > 1)
-      if (isConditional) {
-        val = val.replace('{}', args[1]);
-        if (args.length > 2)
-          multiParams = true;
-      }
-      else if (args.length > 1)
+// Prototype Replace function for parametered localized strings
+I18N.prototype.replaceArgs = function (val, isConditional, args) {
+  var multiParams = false;
+  // If we have a plural/conditional string definition, we need to handle the {n} replacement
+  if (args.length > 1)
+    if (isConditional) {
+      val = val.replace('{}', args[1]);
+      if (args.length > 2)
         multiParams = true;
+    }
+    else if (args.length > 1)
+      multiParams = true;
 
-    // Parameters browse for either generic or named parameters
-    for (var i = isConditional ? 2 : 1; i < args.length; i++) {
-      // For named parameters
-      if (args[i] instanceof Object)
-        for (var p in args[i])
-          val = val.replace(new RegExp('\\{' + p + '\\}', 'g'), args[i][p]);
-      // For generic parameters, either multi params or not
-      else if (multiParams) {
-        var toReplace = '\\{' + (isConditional ? (i - 1) : i) + '\\}';
-        val = val.replace(new RegExp(toReplace, 'g'), args[i]);
-      }
+  // Parameters browse for either generic or named parameters
+  for (var i = isConditional ? 2 : 1; i < args.length; i++) {
+    // For named parameters
+    if (args[i] instanceof Object)
+      for (var p in args[i])
+        val = val.replace(new RegExp('\\{' + p + '\\}', 'g'), args[i][p]);
+    // For generic parameters, either multi params or not
+    else if (multiParams) {
+      var toReplace = '\\{' + (isConditional ? (i - 1) : i) + '\\}';
+      val = val.replace(new RegExp(toReplace, 'g'), args[i]);
+    }
+    else
+      val = val.replace(new RegExp('\\{\\}', 'g'), args[i]);
+  }
+  return val;
+};
+
+// Computed local string retrieval method
+I18N.prototype.getString = function (args) {
+  var input = args[0];
+  if (!(args instanceof Object))
+    input = args;
+
+  if (this.i18n.loaded && input in this.i18n.dictionary) {
+    var val = this.i18n.dictionary[input];
+    // For plural/conditional separated entries
+    if (val instanceof Object) {
+      if (val.hasOwnProperty('zero') && (!args[1] || args[1] == 0))
+        val = val['zero'];
+      else if (val.hasOwnProperty('one') && args[1] == 1)
+        val = val['one'];
+      else if (val.hasOwnProperty('true') && args[1])
+        val = val['true'];
+      else if (val.hasOwnProperty('false') && !args[1])
+        val = val['false'];
+      else if (val.hasOwnProperty('default'))
+        val = val['default'];
       else
-        val = val.replace(new RegExp('\\{\\}', 'g'), args[i]);
+        console.error("i18n: You need to provide at least a 'default' entry in your lang resources for the conditional property " + input);
+      return this.replaceArgs(val, true, args);
     }
-    return val;
-  };
+    // String replace if arguments supplied
+    return this.$sce.trustAsHtml(this.replaceArgs(val, false, args));
+  }
+  else {
+    return input;
+  }
+};
 
-  // Computed local string retrieval method
-  I18N.prototype.getString = function (args) {
-    var input = args[0];
-    if (!(args instanceof Object))
-      input = args;
-
-    if (this.i18n.loaded && input in this.i18n.dictionary) {
-      var val = this.i18n.dictionary[input];
-      // For plural/conditional separated entries
-      if (val instanceof Object) {
-        if (val.hasOwnProperty('zero') && (!args[1] || args[1] == 0))
-          val = val['zero'];
-        else if (val.hasOwnProperty('one') && args[1] == 1)
-          val = val['one'];
-        else if (val.hasOwnProperty('true') && args[1])
-          val = val['true'];
-        else if (val.hasOwnProperty('false') && !args[1])
-          val = val['false'];
-        else if (val.hasOwnProperty('default'))
-          val = val['default'];
-        else
-          console.error("i18n: You need to provide at least a 'default' entry in your lang resources for the conditional property " + input);
-        return this.replaceArgs(val, true, args);
-      }
-      // String replace if arguments supplied
-      return this.$sce.trustAsHtml(this.replaceArgs(val, false, args));
-    }
-    else {
-      return input;
-    }
-  };
-
-  // IsLocaleEmpty to test if locales were set or not
-  I18N.prototype.isLocaleEmpty = function () {
-    return this.i18n.locales ? false : true;
-  };
+// IsLocaleEmpty to test if locales were set or not
+I18N.prototype.isLocaleEmpty = function () {
+  return this.i18n.locales ? false : true;
+};
 
 
 var i18nService = function () {
@@ -200,15 +239,18 @@ var i18nService = function () {
     locales: null
   };
 
-  //SetLocales to init the library
+  // Set Locales external config
+  this.setConfig = function (path) {
+    this.config.path = path;
+  };
+
+  // SetLocales to init the library
   this.setLocales = function (locales) {
     this.config.locales = locales;
   };
 
   this.$get = ['$rootScope', '$cookieStore', '$http', '$q', '$window', '$sce', function ($rootScope, $cookieStore, $http, $q, $window, $sce) {
-
     return new I18N($cookieStore, $http, $q, $window, $sce, $rootScope, this.config);
-
   }];
 
 };
