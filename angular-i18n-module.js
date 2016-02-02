@@ -1,12 +1,9 @@
 /*
  Copyright 2014 Loïc Ortola
-
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
-
  http://www.apache.org/licenses/LICENSE-2.0
-
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -61,9 +58,30 @@ var I18N = function ($cookieStore, $http, $q, $window, $sce, $rootScope, config)
           console.error('i18n: Cannot load external config');
         });
   } else {
-    // If local config
-    this.i18n.locales = config.locales;
-    this.selectLanguage(this.i18n.language);
+    if (!config.locales && config.groupPaths) {
+      config.locales = config.groupPaths;
+      this.i18n.locales = config.locales;
+
+      var requests = [];
+
+      Object.keys(config.groupPaths).forEach(function (key, index) {
+        // key: the name of the object key
+
+        requests.push($http.get(self.i18n.locales[key]).success(function (data) {
+          //populate locales with paths
+          self.i18n.locales[key] = data;
+        }));
+
+        $q.all(requests).then(function () {
+          self.selectLanguage(self.i18n.language);
+        });
+
+      });
+    } else {
+      // If local config
+      this.i18n.locales = config.locales;
+      this.selectLanguage(this.i18n.language);
+    }
   }
 };
 
@@ -77,6 +95,7 @@ I18N.prototype.i18n = {
 
 // Prototype Resource loading method
 I18N.prototype.loadResources = function (url, append) {
+
   var deferred = this.$q.defer();
   this.$http.get(url)
       .success((function (data) {
@@ -121,8 +140,7 @@ I18N.prototype.selectLanguage = function (language) {
   else {
     if (this.i18n.language.substr(0, 2) in this.i18n.locales) {
       res = this.i18n.locales[this.i18n.language.substr(0, 2)];
-    }
-    else {
+    }  else {
       console.log("i18n: Did not find a matching locale resource. Falling back to default");
     }
   }
@@ -134,17 +152,14 @@ I18N.prototype.selectLanguage = function (language) {
 
   var p;
   var self = this;
-  // If multiple urls
+
+// If multiple urls
   if (res instanceof Array) {
     for (var i = 0; i < res.length; i++) {
       if (!p) {
         p = this.loadResources(res[i]);
       } else {
-        p.then(function (n) {
-          return function () {
-            return self.loadResources(res[n], true);
-          };
-        }(n));
+        p.then( self.loadResources(res[i], true));
       }
     }
   } else {
@@ -247,6 +262,12 @@ var i18nService = function () {
   // SetLocales to init the library
   this.setLocales = function (locales) {
     this.config.locales = locales;
+  };
+
+  // SetGroup : a group is a json file with an array of
+  //all translations files to load for a specific language
+  this.setGroups = function (groups) {
+    this.config.groupPaths = groups;
   };
 
   this.$get = ['$rootScope', '$cookieStore', '$http', '$q', '$window', '$sce', function ($rootScope, $cookieStore, $http, $q, $window, $sce) {
