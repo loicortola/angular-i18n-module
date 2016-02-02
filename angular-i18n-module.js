@@ -134,17 +134,13 @@ I18N.prototype.selectLanguage = function (language) {
 
   var p;
   var self = this;
-  // If multiple urls
+// If multiple urls
   if (res instanceof Array) {
     for (var i = 0; i < res.length; i++) {
       if (!p) {
         p = this.loadResources(res[i]);
       } else {
-        p.then(function (n) {
-          return function () {
-            return self.loadResources(res[n], true);
-          };
-        }(n));
+        p.then( self.loadResources(res[i], true));
       }
     }
   } else {
