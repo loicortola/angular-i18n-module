@@ -82,6 +82,8 @@ I18N.prototype.i18n = {
   // Prototype Language selection method
   I18N.prototype.selectLanguage = function (language) {
 
+    var self = this;
+
     this.i18n.language = language;
 
     console.debug("i18n: Selected language:", this.i18n.language);
@@ -113,7 +115,7 @@ I18N.prototype.i18n = {
 
     return this.loadResources(url)
                .then(function () {
-                  rootScope.$emit('i18nService.onLocaleLoaded', this.i18n.language);
+                  rootScope.$emit('i18nService.onLocaleLoaded', self.i18n.language);
                });
   };
 
