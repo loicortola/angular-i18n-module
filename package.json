@@ -1,0 +1,23 @@
+{
+  "name": "angular-i18n-module",
+  "version": "0.2.2",
+  "description": "A simple to use and effective AngularJS library to translate your app",
+  "main": "angular-i18n-module.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/loicortola/angular-i18n-module.git"
+  },
+  "keywords": [
+    "angular",
+    "i18n"
+  ],
+  "author": "Loic Ortola",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/loicortola/angular-i18n-module/issues"
+  },
+  "homepage": "https://github.com/loicortola/angular-i18n-module#readme"
+}
