@@ -1,6 +1,6 @@
 {
   "name": "angular-i18n-module",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "A simple to use and effective AngularJS library to translate your app",
   "main": "angular-i18n-module.js",
   "scripts": {
