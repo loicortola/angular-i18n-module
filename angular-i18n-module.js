@@ -181,6 +181,21 @@ I18N.prototype.i18n = {
     }
   };
 
+  // Computed local array retrieval method
+  I18N.prototype.getArray = function (args) {
+    var input = args[0];
+    if (!(args instanceof Object))
+      input = args;
+
+    if (this.i18n.loaded && input in this.i18n.dictionary) {
+      var val = this.i18n.dictionary[input];
+      if (val instanceof Array)
+        return val;
+    } else {
+      return [input];
+    }
+  }
+
   // IsLocaleEmpty to test if locales were set or not
   I18N.prototype.isLocaleEmpty = function () {
     return this.i18n.locales ? false : true;
