@@ -23,7 +23,9 @@ Add a `<script>` to your `index.html`:
 ```
 
 Add `i18n` as a dependency for your app (in the app module declaration line) in your main Angular app.js, and configure your locale resources:
-__NB: You need to put at least one resource named "default"__
+__NB: You need to put at least one resource named "default".__
+
+__NB bis: angular-cookies > 1.4.0 and angular-sanitize > 1.4.0 must be injected as well before i18n module.__
 ```javascript
 var app = angular.module('app', ['myModule1', 'myModule2 ', 'myModule3', 'i18n']);
 
